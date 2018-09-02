@@ -1,7 +1,7 @@
 'use strict'
 
-const cols = 5
-const rows = 5
+const cols = 15
+const rows = 15
 
 var grid
 
@@ -9,6 +9,18 @@ var w, h
 
 var openSet = []
 var closedSet = []
+
+var start, end
+
+var path = []
+
+var current
+
+function _heuristic (a, b) {
+  // let d = dist(a.x, a.y, b.x, b.y)
+  let d = abs(a.x - b.x) + abs(a.y - b.y)
+  return d
+}
 
 function Spot (i, j) {
   this.x = i
@@ -19,6 +31,8 @@ function Spot (i, j) {
   this.h = 0
 
   this.neigh = []
+
+  this.prev = undefined
 
   this.show = function (col) {
     fill(col)
@@ -72,13 +86,21 @@ function setup () {
     }
   }
 
-  let start = grid[0][0]
-  let end = grid[cols - 1][rows - 1]
+  start = grid[0][0]
+  end = grid[cols - 1][rows - 1]
 
   openSet.push(start)
+}
 
-  //   -------------    //
+function _removeFrom (arr, val) {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i] === val) {
+      arr.splice(i, 1)
+    }
+  }
+}
 
+function draw () {
   if (openSet.length > 0) {
     let winner = 0
     for (let i = 0; i < openSet.length; i++) {
@@ -87,12 +109,13 @@ function setup () {
       }
     }
 
-    let current = openSet[winner]
+    current = openSet[winner]
     if (current === end) {
+      noLoop()
       console.log('Done!')
     }
 
-    removeFrom(openSet, current)
+    _removeFrom(openSet, current)
     closedSet.push(current)
 
     let neighs = current.neigh
@@ -112,7 +135,11 @@ function setup () {
           openSet.push(n)
         }
 
-      // Min 38
+        n.h = _heuristic(n, end)
+
+        n.f = n.g + n.h
+
+        n.prev = current
       }
     }
   }
@@ -131,13 +158,15 @@ function setup () {
     closedSet[i].show(color(255, 0, 0))
   }
 
-  console.log(grid)
-}
+  path = []
+  var temp = current
+  path.push(temp)
+  while(temp.prev) {
+    path.push(temp.prev)
+    temp = temp.prev
+  }
 
-function removeFrom (arr, val) {
-  for (let i = arr.length - 1; i >= 0; i--) {
-    if (arr[i] === val) {
-      arr.splice(i, 1)
-    }
+  for (let i = 0; i < path.length; i++) {
+    path[i].show(color(0, 0, 255))
   }
 }
