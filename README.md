@@ -1,1 +1,3 @@
 # SearchAlgorithmJS
+
+> A* Search Algorithm
