@@ -1,7 +1,7 @@
 'use strict'
 
-const cols = 15
-const rows = 15
+const cols = 50
+const rows = 50
 
 var grid
 
@@ -16,9 +16,11 @@ var path = []
 
 var current
 
+var walls = 0.4
+
 function _heuristic (a, b) {
-  // let d = dist(a.x, a.y, b.x, b.y)
-  let d = abs(a.x - b.x) + abs(a.y - b.y)
+  let d = dist(a.x, a.y, b.x, b.y)
+  //   let d = abs(a.x - b.x) + abs(a.y - b.y)
   return d
 }
 
@@ -34,8 +36,17 @@ function Spot (i, j) {
 
   this.prev = undefined
 
+  this.wall = false
+
+  if (random(1) < walls) {
+    this.wall = true
+  }
+
   this.show = function (col) {
     fill(col)
+    if (this.wall) {
+      fill(0)
+    }
     noStroke()
     rect(this.x * w, this.y * h, w - 1, h - 1)
   }
@@ -58,6 +69,22 @@ function Spot (i, j) {
 
     if (j < rows - 1) {
       this.neigh.push(grid[i][j + 1])
+    }
+    // Diagonals
+    if (i > 0 && j > 0) {
+      this.neigh.push(grid[i - 1][j - 1])
+    }
+
+    if (i < cols - 1 && j < rows - 1) {
+      this.neigh.push(grid[i + 1][j + 1])
+    }
+
+    if (i < cols - 1 && j > 0) {
+      this.neigh.push(grid[i + 1][j - 1])
+    }
+
+    if (i > 0 && j < rows - 1) {
+      this.neigh.push(grid[i - 1][j + 1])
     }
   }
 }
@@ -88,6 +115,8 @@ function setup () {
 
   start = grid[0][0]
   end = grid[cols - 1][rows - 1]
+  start.wall = false
+  end.wall = false
 
   openSet.push(start)
 }
@@ -123,25 +152,32 @@ function draw () {
     for (let i = 0; i < neighs.length; i++) {
       let n = neighs[i]
 
-      if (!closedSet.includes(n)) {
+      if (!closedSet.includes(n) && !n.wall) {
         var tempG = current.g + 1
+
+        let newPath = false
 
         if (openSet.includes(n)) {
           if (tempG < n.g) {
             n.g = tempG
+            newPath = true
           }
         } else {
           n.g = tempG
+          newPath = true
           openSet.push(n)
         }
 
-        n.h = _heuristic(n, end)
-
-        n.f = n.g + n.h
-
-        n.prev = current
+        if (newPath) {
+          n.h = _heuristic(n, end)
+          n.f = n.g + n.h
+          n.prev = current
+        }
       }
     }
+  } else {
+    noLoop()
+    console.log('No solution!')
   }
 
   for (let i = 0; i < cols; i++) {
